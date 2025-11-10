@@ -1,0 +1,225 @@
+---
+title: "Reproducibilidad y Comunicación de Resultados"
+subtitle: "Clase 1 – Introducción"
+author: "Constanza Trujillo / José Ruiz-Tagle"
+date: "10 de noviembre de 2025"
+format:
+  revealjs:
+    theme: white
+    slide-number: true
+    transition: fade
+    toc: false
+    incremental: true
+    embed-resources: true
+    footer: "Curso: Reproducibilidad y Comunicación de Resultados"
+    background-transition: fade
+lang: es
+---
+
+<style>
+/* Fondo y tipografía general */
+.reveal .slides {
+  background-color: #f9fafc !important;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: #1a1a1a;
+}
+
+/* Títulos */
+.reveal h1, 
+.reveal h2, 
+.reveal h3 {
+  color: #0a304e !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Subtítulo más sutil */
+.reveal .subtitle {
+  color: #3c5a73;
+  font-weight: 400;
+}
+
+/* Texto general */
+.reveal p,
+.reveal li {
+  font-size: 2rem !important;
+  line-height: 1.5;
+}
+
+/* Bloques de cita */
+.reveal blockquote {
+  border-left: 4px solid #0a304e;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #333;
+  background: #eef3f8;
+  border-radius: 6px;
+}
+
+/* Tablas limpias */
+.reveal table {
+  font-size: 1rem;
+  border-collapse: collapse;
+}
+.reveal table th {
+  background: #0a304e;
+  color: white;
+  padding: 8px;
+}
+.reveal table td {
+  border: 1px solid #ccc;
+  padding: 6px;
+}
+
+/* Footer discreto */
+.reveal footer {
+  color: #666;
+  font-size: 0.8rem;
+  border-top: 1px solid #ddd;
+  padding-top: 0.3rem;
+}
+
+/* Enlaces */
+.reveal a {
+  color: #0a5482;
+  text-decoration: none;
+  font-weight: 500;
+}
+.reveal a:hover {
+  text-decoration: underline;
+}
+
+/* Listas */
+.reveal ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+</style>
+## Objetivos de la sesión
+
+-   Comprender qué significa “reproducir” un análisis.
+-   Distinguir reproducibilidad de replicabilidad.
+-   Identificar las piezas de un proyecto reproducible.
+-   Conectar con las evaluaciones del curso.
+
+------------------------------------------------------------------------
+
+## ¿Por qué importa?
+
+-   Más datos, más complejidad.
+-   Más exigencia de transparencia.
+-   Equipos que trabajan en máquinas distintas.
+-   Necesidad de auditar o reutilizar análisis.
+
+> Sin documentación y sin código ejecutable, el resultado es frágil.
+
+------------------------------------------------------------------------
+
+## Tres conceptos cercanos
+
+1.  **Repetibilidad**\
+    Misma persona, mismo entorno.
+
+2.  **Reproducibilidad**\
+    Otra persona, mismos datos y código.
+
+3.  **Replicabilidad**\
+    Otra persona, otros datos comparables.
+
+------------------------------------------------------------------------
+
+## Definición operativa
+
+Un análisis es reproducible si otra persona puede:
+
+-   acceder a los **datos**,
+-   ejecutar el **código completo**,
+-   con las **mismas dependencias**,
+-   y obtener el **mismo producto final**.
+
+------------------------------------------------------------------------
+
+## ¿Qué suele fallar?
+
+-   Datos no están o cambiaron.
+-   Código está incompleto o disperso.
+-   Paquetes actualizados rompen el análisis.
+-   Decisiones analíticas no registradas.
+
+------------------------------------------------------------------------
+
+## Ciencia abierta
+
+-   Marco que promueve **acceso a datos, código y materiales**.
+-   Respaldada por universidades, journals y financiadores.
+-   Beneficios: visibilidad, revisión, reutilización.
+
+Nuestro curso se alinea con este marco.
+
+------------------------------------------------------------------------
+
+## Piezas de un proyecto reproducible (1)
+
+-   Carpeta ordenada (`data/`, `scripts/`, `output/`, `docs/`).
+-   Un **informe dinámico** (Quarto/Rmd).
+-   Metadatos: README, autor, fecha.
+
+------------------------------------------------------------------------
+
+## Piezas de un proyecto reproducible (2)
+
+-   **Gestión de dependencias** (mismas versiones de paquetes).
+-   **Control de versiones** (Git/GitHub).
+-   Documentación del **conjunto de datos** (codebook).
+
+------------------------------------------------------------------------
+
+## Codebook y documento de campo
+
+-   Describe variables, categorías, códigos perdidos.
+-   Explica cómo se levantaron los datos.
+-   Permite que otro entienda qué se analizó.
+-   Clave para reutilización y para equipos.
+
+------------------------------------------------------------------------
+
+## Herramientas que veremos
+
+-   **Quarto / R Markdown** → informe integrado.
+-   **Git / GitHub** → versión y colaboración.
+-   **R + gestión de paquetes**: `renv`, `checkpoint()`, `rang`.
+-   **Documentación**: paquete `codebook`.
+
+Hoy las presentamos. Luego las usamos.
+
+------------------------------------------------------------------------
+
+## Gestión de dependencias
+
+Problema: “a mí me corría”.
+
+Solución: congelar el entorno.
+
+-   `renv`: entorno por proyecto + lockfile.
+-   `checkpoint()`: congelar por fecha.
+-   `rang` / `dateback`: reproducir entornos antiguos.
+
+------------------------------------------------------------------------
+
+## Evaluaciones del curso
+
+-   **Taller 1 (40%)**: informe reproducible (HTML) con Quarto/Rmd.
+-   **Taller 2 (40%)**: dashboard Shiny.
+-   **Participación (20%)**: trabajo en clase.
+
+Lo de hoy es la base conceptual para poder entregar eso.
+
+------------------------------------------------------------------------
+
+## Siguiente paso
+
+En la parte práctica vamos a:
+
+1.  Crear un proyecto ordenado.
+2.  Renderizar un Quarto a HTML.
+3.  Mostrar dónde entra `renv`.
