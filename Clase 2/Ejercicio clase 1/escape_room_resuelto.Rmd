@@ -1,0 +1,108 @@
+---
+title: "Escape Room — Constanza (Ejemplo)"
+author: "Diplomado Data Science — Reproducibilidad"
+date: "`r format(Sys.Date(), '%d-%m-%Y')`"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    toc_depth: 3
+  pdf_document: default
+lang: es
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.align = "center")
+set.seed(1234)
+```
+
+# Desafío: *Escape Room R Markdown* 🔐
+
+**Objetivo:** desbloquear una **frase secreta** siguiendo pistas. Este archivo es la **versión resuelta** para el/la docente.
+
+---
+
+## 1) Prepara el terreno (YAML y setup)
+El título del YAML ya incluye “Escape Room”. El *chunk* `setup` configura opciones globales.
+
+## 2) Pista de *inline code*
+En este párrafo insertamos inline:
+Hoy es `r format(Sys.Date(), "%d-%m-%Y")`; la base tiene `r nrow(mtcars)` filas y el MPG promedio es `r round(mean(mtcars$mpg), 1)`.
+
+```{r, echo=FALSE, results='hide'}
+# Marcador invisible para el validador
+invisible(.InlineTest <- TRUE)
+```
+
+## 3) Pista de tabla (kable)
+```{r tabla_mtcars, echo=TRUE}
+library(dplyr)
+library(knitr)
+
+tabla_ok_df <- mtcars %>% 
+  tibble::rownames_to_column("modelo") %>%
+  slice_sample(n = 6) %>%
+  rename(
+    rend_mpg = mpg, 
+    cilindros = cyl, 
+    disp_pulg3 = disp,
+    hp = hp,
+    rel_eje = drat,
+    peso_1000lbs = wt,
+    qtr_milla = qsec,
+    vs = vs,
+    am = am,
+    engranajes = gear,
+    carburadores = carb
+  )
+
+kable(tabla_ok_df, caption = "Muestra aleatoria de 6 autos (mtcars) con columnas en español.")
+# bandera para el validador
+tabla_ok <- TRUE
+```
+
+## 4) Pista de gráfico con leyenda (fig.cap)
+```{r grafico_mpg_wt, fig.cap="Relación peso vs rendimiento", out.width="70%", echo=TRUE}
+plot(mtcars$wt, mtcars$mpg,
+     xlab = "Peso (1000 lbs)", ylab = "Rendimiento (mpg)")
+abline(lm(mpg ~ wt, data = mtcars))
+# bandera para el validador
+fig_ok <- TRUE
+```
+
+## 5) Pista de control de salida
+
+### A) Chunk que se ejecuta pero no muestra nada
+```{r clave_oculta, include=FALSE}
+clave_parcial <- "RMD"
+```
+
+### B) Chunk que muestra resultados pero oculta el código
+```{r potencia_media, echo=FALSE}
+cat("La potencia media es:", round(mean(mtcars$hp), 0))
+```
+
+## 6) Compila a HTML y PDF
+En el YAML ya están activados `html_document` y `pdf_document`.
+
+## 7) Puerta final (validador mínimo)
+```{r final, echo=FALSE}
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
+
+ok_yaml    <- grepl("Escape Room", rmarkdown::metadata$title %||% "")
+ok_inline  <- isTRUE(exists(".InlineTest", envir = knitr::knit_global()))
+ok_tabla   <- exists("tabla_ok", inherits = TRUE)
+ok_fig     <- exists("fig_ok", inherits = TRUE)
+ok_incl    <- exists("clave_parcial", inherits = TRUE)
+
+score <- sum(ok_yaml, ok_inline, ok_tabla, ok_fig, ok_incl)
+mensaje <- switch(as.character(score),
+  "5" = paste0("✅ Frase secreta: ", paste0(c('RE','PRO','DU','CI','BLE'), collapse = '-')),
+  "4" = "Casi! Revisa que el chunk oculto con include=FALSE exista y que la tabla/figura marquen sus banderas.",
+  "3" = "Vas a mitad de camino. Revisa inline, tabla y gráfico.",
+  "2" = "Faltan varias pistas. Revisa YAML y chunks.",
+  "1" = "Solo hay una pista correcta. Sigue las instrucciones paso a paso.",
+  "0" = "Aún no hay pistas válidas. Comienza por el YAML y el setup."
+)
+cat(mensaje)
+```

@@ -1,0 +1,334 @@
+---
+title: "Clase 1 — RMarkdown"
+author: "Constanza Trujillo y José Ruiz-Tagle"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    #css: styles.css
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    df_print: paged
+    theme: simple
+  word_document:
+    toc: true
+    toc_depth: '3'
+  pdf_document:
+    toc: true
+    number_sections: true
+    fig_caption: true
+---
+
+> **Objetivo:** entender **qué es R Markdown**, cómo funciona la combinación **texto + código**, qué es un **chunk**, cómo controlar su ejecución con **opciones** (`echo`, `eval`, `include`, `results`, `message`, `warning`, `fig.*`), y cómo **compilar (Knit)** a **HTML** y **PDF**.
+
+---
+
+```{r, echo=FALSE, results = 'hide', message=FALSE, warning=FALSE}
+
+# Paquetes base para rutas y carpetas
+req <- c("here", "fs")
+inst <- rownames(installed.packages())
+if (length(setdiff(req, inst)) > 0) install.packages(setdiff(req, inst))
+lapply(req, library, character.only = TRUE)
+
+# Asegura que knit/render use la raíz del proyecto (requiere abrir el .Rproj)
+knitr::opts_knit$set(root.dir = here::here())
+
+# Estructura mínima y clara para reproducibilidad
+carpetas <- c(
+  "data",       # datos listos para análisis (limpios, derivados)
+  "scripts",    # scripts auxiliares (.R) que usa el informe
+  "figs",       # figuras exportadas (png, svg, pdf)
+  "outputs",    # tablas/exports finales (csv, html, pdf)
+  "reports"     # informes adicionales (pptx, docx, etc.)
+)
+fs::dir_create(here::here(carpetas))
+
+# Mensaje útil para el knit log
+cat("Raíz del proyecto:", here::here(), "\n")
+
+
+renv::snapshot()
+```
+
+
+# ¿Qué es R Markdown?
+
+R Markdown es un formato que permite escribir documentos que mezclan **prosa** (Markdown) y **código ejecutable** (R, y otros).  
+Al “tejer” el documento (Knit), **knitr** ejecuta el código, **rmarkdown** arma el informe y lo exporta a **HTML**, **PDF** o **Word**.
+
+- **Markdown** = sintaxis ligera para dar formato (títulos, listas, negritas, tablas).
+- **Chunks** = bloques de código R delimitados por ```` ```{r} ```` y ```` ``` ````.
+- **YAML** = cabecera al inicio entre `---` con **metadatos** (título, autor, fecha) y **formatos de salida**.
+
+---
+
+# Anatomía de un `.Rmd`
+
+Un archivo `.Rmd` típico tiene tres partes:
+
+1. **YAML** (entre líneas `---`) con título/autor/fecha y `output:`.
+2. **Prosa en Markdown** (texto con formato).
+3. **Chunks de código** (ejecutables) y **código inline** (en línea) con `` `r` ``.
+
+---
+
+# Chunks: crear, nombrar y ejecutar
+
+En **RStudio**:
+
+- Insertar chunk: **Ctrl/Cmd + Alt + I** o botón *Insert Chunk*.
+- Estructura básica:
+
+```{r nombre-opcional, echo=TRUE}
+# tu código aquí
+```
+
+- Ejecutar un chunk: ícono "Run" (triángulo) en el borde del chunk o **Ctrl/Cmd + Shift + Enter** para ejecutar el documento de arriba hacia abajo.
+
+---
+
+# Opciones de chunk más usadas (knitr)
+
+Estas van en la cabecera `{r ...}` o como **globales** en el chunk `setup`.
+
+- `echo = TRUE/FALSE` → ¿se muestra el **código** en el informe?
+- `eval = TRUE/FALSE` → ¿se **ejecuta** el código?
+- `include = TRUE/FALSE` → ¿incluye **código + output** en el informe (aunque se ejecute)?
+- `message = TRUE/FALSE` y `warning = TRUE/FALSE` → mostrar/ocultar mensajes y advertencias.
+- `results = 'hide'|'asis'` → controlar salida textual.
+- `fig.width`, `fig.height`, `fig.align`, `fig.cap`, `out.width` → control de gráficos.
+
+> **Diferencias clave**:  
+> • `echo=FALSE` oculta el **código**, pero muestra el **resultado**.  
+> • `eval=FALSE` muestra el **código** sin ejecutarlo (no hay resultado).  
+> • `include=FALSE` ejecuta pero **no** incluye nada en el informe (útil para cargas y setups).
+
+---
+
+# Setup global de chunks
+
+Se recomienda un chunk inicial **(setup)** con `include=FALSE` para fijar opciones globales:
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  fig.width = 7, fig.height = 4.5,
+  out.width = "80%"
+)
+set.seed(123)  #hace que todo lo aleatorio (muestreos, particiones train/test, etc.) dé exactamente el mismo resultado cada vez que corre el script
+```
+
+
+# DEMO: texto, inline code y listas
+
+**Markdown básico**
+
+(Deja **una línea en blanco** antes de listas como esta.)
+
+- **Negrita** con `**así**` y *cursiva* con `*así*`.
+- Lista:
+  - item 1
+  - item 2
+
+**Código inline**: hoy es `r format(Sys.Date(), "%d-%m-%Y")` y `mtcars` tiene `r nrow(mtcars)` filas.
+*El texto inline (o código inline) en R Markdown es código R corto que se evalúa dentro de una línea de texto y su resultado se inserta en el párrafo al compilar. Se escribe entre backticks con r al inicio.*
+
+# Ejemplos de chunks y opciones
+
+*mtcars es un dataset incorporado en R (viene “de fábrica”). Resume datos de 32 automóviles probados por la revista Motor Trend (1974), con 11 variables como consumo y desempeño.*
+
+## Chunk básico
+
+```{r basico}
+1 + 1   # suma simple
+mean(c(1, 2, 3, 10))  # media de una serie de números
+```
+
+## `echo=FALSE` (oculta código, muestra resultados)
+
+```{r solo_resultados, echo=FALSE}
+summary(mtcars$mpg)    # Resumen estadístico de un vector numérico (mpg = millas/galón)
+                       # Devuelve: Min., 1er cuartil (25%), Mediana (50%),
+                       #           Media (promedio), 3er cuartil (75%) y Máx.
+                       # Si hubiera NA, también mostraría "NA's: <cantidad>".
+                       # Útil para ver rango, tendencia central y dispersión rápida.
+```
+
+## `eval=FALSE` (muestra código, no ejecuta)
+
+```{r mostrar_sin_ejecutar, eval=FALSE}
+plot(mtcars$wt, mtcars$mpg)  # plot(x,y): dispersión; X=mtcars$wt (peso, 1000 lbs), Y=mtcars$mpg (rendimiento)
+```
+
+## Gráfico con `fig.cap` y `out.width`
+
+```{r grafico, fig.cap="Relación peso vs rendimiento (mtcars)", out.width="70%"}
+plot(mtcars$wt, mtcars$mpg,                       # dispersión X=wt (peso 1000 lbs), Y=mpg (millas/galón)
+     pch = 19,                                    # tipo de punto: círculo sólido
+     xlab = "Peso (1000 lbs)",                    # etiqueta eje X
+     ylab = "Millas por galón")                   # etiqueta eje Y
+
+abline(lm(mpg ~ wt, data = mtcars),              # añade la recta de regresión mpg ~ wt
+       lwd = 2)                                  # grosor de la línea (más visible)
+```
+
+## `message` y `warning`
+
+```{r mensajes, message=TRUE, warning=TRUE}
+library(dplyr)            # Carga el paquete dplyr para manipulación de datos (pipes, group_by, summarise, etc.)
+mtcars %>%                # Toma el data.frame mtcars y pásalo por la pipe (%>%) Ctrl + Shift + M
+  group_by(cyl) %>%       # Agrupa las filas por número de cilindros (cyl: 4, 6, 8)
+  summarise(              # Calcula resúmenes por cada grupo de 'cyl'
+    mpg_prom = mean(mpg), # promedio de millas/galón dentro de cada grupo
+    .groups = "drop")     # quita el atributo de agrupación en el resultado final
+```
+
+## Tablas con `knitr::kable`
+
+- head(iris): toma las primeras 6 filas del dataset iris (incluye Sepal/ Petal medidas y Species)
+- knitr::kable(): crea una tabla “bonita” para el informe (funciona en HTML, PDF y Word)
+- caption = "..." : pone un pie de tabla (se numera si el formato lo permite y usas fig/tab captions)
+- con kableExtra se pueden crear múltiples tipos de tablas, con colores, con imágenes, con gráficos, etc.
+
+```{r tabla}
+knitr::kable(
+  head(iris), # datos a mostrar (primeras 6 filas)
+  caption = "Primeras filas de iris") # título/pie de la tabla
+```
+```{r}
+# --- Variantes útiles  -------------------------
+
+# Alinear columnas: "l"=left, "c"=center, "r"=right (uno por columna)
+ knitr::kable(head(iris), align = c("l","r","r","r","c"),
+              caption = "Iris alineado")
+
+# Renombrar encabezados de columnas:
+ knitr::kable(head(iris),
+              col.names = c("Largo Sépalo","Ancho Sépalo","Largo Pétalo","Ancho Pétalo","Especie"),
+              caption = "Iris con encabezados en español")
+
+# En HTML puedes combinar con kableExtra para estilo avanzado:
+if (knitr::is_html_output()) {
+   knitr::kable(head(iris), caption = "Iris con estilo") |>
+     kableExtra::kable_styling(full_width = FALSE) #no queremos que su ancho sea de toda la pantalla
+ }
+```
+
+```{r}
+library(dplyr)
+library(kableExtra)
+```
+
+
+```{r}
+text_tbl <-data.frame(
+ Items= c("Item1", "Item2", "Item3"),
+ Features =c(
+ "Loremipsumdolorsit amet,consectetur adipiscingelit.Proinvehicula temporex.Morbimalesuadasagittis",
+ "In euurna atmagnaluctusrhoncus quis innisl.Fusceinvelitvarius, posuere risuset,cursusaugue.",
+ "Vivamus venenatisegestas eros uttempus. Vivamus idest nisi.Aliquam molestie erat etsollicitudin"
+ )
+ )
+ kbl(text_tbl,booktabs =T)%>%
+ kable_styling(full_width= F)%>%
+ column_spec(1,bold = T,color= "red") %>%
+ column_spec(2,width= "30em")
+```
+
+```{r}
+that_cell<-c(rep(F,7),T)
+ mtcars[1:8,1:8] %>%
+ kbl(booktabs =T,linesep = "") %>%
+ kable_paper(full_width= F)%>%
+ column_spec(2,color=spec_color(mtcars$mpg[1:8]),
+ link = "https://haozhu233.github.io/kableExtra") %>%
+ column_spec(6,color= "white",
+ background= spec_color(mtcars$drat[1:8],end =0.7),
+ popover = paste("am:",mtcars$am[1:8])) %>%
+ column_spec(9,strikeout=that_cell,bold = that_cell,
+ color= c(rep("black",7),"red"))
+```
+
+
+## `results='hide'` y `include=FALSE`
+
+```{r solo_calculos, results='hide'}
+# Se ejecuta pero no muestra resultados
+x <- rnorm(1e5)      # Genera 100.000 (1e5) números aleatorios ~ N(0, 1) y los guarda en 'x'
+                     #  rnorm(n) produce valores con media 0 y desviación estándar 1 por defecto.
+                     
+media_x <- mean(x)   # Calcula la media (promedio) de esos 100.000 valores y la guarda en 'media_x'
+                     #  Por la ley de los grandes números, este valor debería estar cerca de 0.
+```
+
+```{r usa_objeto, echo=FALSE}
+media_x
+```
+
+```{r carga_silenciosa, include=FALSE}
+library(ggplot2)
+```
+
+
+# ¿Cómo compilar (Knit)?
+
+## Desde RStudio
+
+1. Guarda el `.Rmd`.
+2. Usa la flecha del botón **Knit** para elegir **HTML** o **PDF**, y clic en **Knit**.
+
+## Con código (automatización)
+
+```{r render, eval=FALSE}
+install.packages("rmarkdown")
+# HTML
+rmarkdown::render("clase01_demo.Rmd", output_format = "html_document")
+# PDF
+rmarkdown::render("clase01_demo.Rmd", output_format = "pdf_document")
+```
+
+# Exportar a **PDF** (TinyTeX)
+
+Para generar PDF necesitas LaTeX. La opción más simple es **tinytex**:
+
+```{r tinytex, eval=FALSE}
+install.packages("tinytex")
+tinytex::install_tinytex()  # una sola vez
+```
+
+> Si ya tienes MiKTeX/TeX Live, no instales tinytex.
+> Si faltan paquetes LaTeX: `tinytex::tlmgr_install("<paquete>")` o `tinytex::reinstall_tinytex()`.
+
+# HTML vs PDF vs Word
+
+- **HTML**: liviano, interactivo (plegado de código, tablas paginadas), fácil de compartir.
+- **PDF**: estable para impresión/entrega formal, requiere LaTeX.
+- **Word**: editable por terceros.
+
+Puedes definir múltiples salidas en `output:` y elegir desde la flecha de **Knit**.
+
+# Ejercicios
+
+1. Crea un `.Rmd` con YAML mínimo (título/autor/fecha) y `output: html_document`.
+2. Inserta **3 chunks**:
+   - a) cálculo simple (p.ej., media de un vector),
+   - b) un gráfico con `fig.cap`,
+   - c) una tabla con `knitr::kable`.
+3. Juega con `echo`, `eval`, `include`, `message`, `warning`, `results`.
+4. Agrega **código inline** con length(unique(iris$Species)).
+5. Activa `code_folding: show` y **compila a HTML**.
+6. Instala **tinytex** y **compila a PDF**.
+
+# Problemas comunes
+
+- **No compila a PDF** → instala `tinytex` (o verifica LaTeX), reinicia RStudio y vuelve a knit.
+- **Paquetes faltantes** → `install.packages("<paquete>")` o `tinytex::tlmgr_install("<paquete LaTeX>")`.
+- **Rutas con tildes/espacios** → evita caracteres raros en carpetas.
+- **Demasiados mensajes/advertencias** → usa `message=FALSE, warning=FALSE` o limpia el ambiente y re-knit.
+- **Resultados/gráficos desordenados** → ajusta `fig.width/height`, `out.width`, `fig.align`
