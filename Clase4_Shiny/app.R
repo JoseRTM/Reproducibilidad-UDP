@@ -4,7 +4,7 @@ library(rio)
 library(tidyverse)
 library(DT)
 library(shinydashboard)
-data <- import("casen_red.sav")
+data <- import("clase4_Shiny/casen_red.sav")
 # Para hacer una app en shiny necesitamos dos componentes:
 # El ui y el server.
 
@@ -148,34 +148,6 @@ shinyApp(ui, server)
 # proponga en el sidepanel un filtro por decil de ingreso
 # disponga una tabla resumen de la variable puntaje NEM
 
-ui <- fluidPage(
-  titlePanel("Panel principal Ejercicio 3"),
-  sidebarLayout(
-    sidebarPanel(
-      h4("Filtro por decil de ingreso"),
-      selectInput(
-        inputId = "decil",
-        label = "Filtrar por decil de ingreso",
-        choices = sort(unique(paes$INGRESO_PERCAPITA_GRUPO_FA))
-      )
-    ),
-  mainPanel(
-    h4("Resultados"),
-    verbatimTextOutput("resumen")
-  ) 
-  )
-)
-
-server <- function(input, output, session) {
-  output$resumen <- renderPrint({
-    summary(paes$PTJE_NEM)
-  }
-    
-  )
-}
-
-shinyApp(ui, server)
-
 #####################################
 # EJEMPLO 4 - fluidRow() y column() #
 #####################################
@@ -222,6 +194,15 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+###############
+# EJERCICIO 4 #
+###############
+
+# Utilice el sistema de grillas para hacer dos paneles.
+# Ambos paneles deben ser del mismo tamaño
+# En el panel de la izquierda incluya un histograma de la variable puntaje NEM
+# En el panel derecho incluya una tabla de frecuencia de la variable ingreso
 
 ############################################################
 # EJEMPLO 5 - Inputs y Outputs (textInput, selectInput,
@@ -271,7 +252,7 @@ ui <- fluidPage(
       # verbatimTextOutput(): muestra texto estilo consola
       verbatimTextOutput("resumen_edad"),
       
-      br(),
+      br(), # salto de espacio
       h4("Histograma de edad"),
       
       # plotOutput(): espacio para el gráfico
@@ -283,7 +264,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   # Datos filtrados según el sexo seleccionado ----------------
-  datos_filtrados <- reactive({
+  datos_filtrados <- reactive({ # reactive es el reactivo para manipulación
     df <- data
     
     # Si el usuario elige un sexo específico, filtramos
@@ -315,6 +296,14 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+###############
+# EJERCICIO 5 #
+###############
+
+# Ejecute una shinyapp para visualizar un histograma de puntaje nem utilizando un
+# filtro por decil de ingreso
+# en el mainpanel ponga arriba el gráfico y abajo el summary
 
 ##########################################
 # EJEMPLO D1 - Estructura mínima dashboard
@@ -350,6 +339,8 @@ ui <- dashboardPage(
 server <- function(input, output, session) {}
 
 shinyApp(ui, server)
+
+# puedes revisar la lista de iconos en este link https://fontawesome.com/search#icongrid
 
 ##################################################
 # EJEMPLO D2 - Menú lateral con dos pestañas
@@ -763,14 +754,15 @@ server <- function(input, output, session) {
         !is.na(edad),
         edad >= input$edad_rango[1],
         edad <= input$edad_rango[2]
-      )
+      ) %>% 
+      mutate(nse = factor(nse),
+             sexo = factor(sexo),
+             region = factor(region))
   })
   
   # Resumen por grupo
   resumen_por_grupo <- reactive({
     df <- datos_filtrados()
-    if (nrow(df) == 0) return(NULL)
-    
     df %>%
       group_by(.data[[input$var_grupo]]) %>%
       summarise(
@@ -816,6 +808,151 @@ server <- function(input, output, session) {
     datos_filtrados() %>%
       select(nse, sexo, edad, region, v18) %>%
       head(50)  # para que no sea enorme
+  })
+}
+
+shinyApp(ui, server)
+
+###################
+# EJERCICIO FINAL #
+###################
+
+# crear un shinydashboard con dos pestañas.
+# la primera pestaña debe incluir un input que agrupe por decil de ingreso
+# debe limpiar el 99, -88 y 0 de las variables  en el reactive
+# En el main, muestre un boxplot de la variable puntaje NEM
+# Abajo muestre una tabla con DT
+# la segunda pestaña debe incluir una tabla de la base completa.
+
+ui <- dashboardPage(
+  
+  dashboardHeader(title = "Ejercicio final",
+                  titleWidth = 350),
+  
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Exploración gráfica", tabName = "grafico", icon = icon("chart-bar")),
+      menuItem("Tabla de datos",      tabName = "tabla",   icon = icon("table"))
+    )
+  ),
+  
+  dashboardBody(
+    tabItems(
+     
+      tabItem(
+        tabName = "grafico",
+        
+        fluidRow(
+          # Caja izquierda: filtros
+          box(
+            title = "Agrupación",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 4,
+            
+            selectInput(
+              inputId = "decil",
+              label   = "Agrupar por decil de ingreso",
+              choices = c("Todo", sort(unique(paes$INGRESO_PERCAPITA_GRUPO_FA))),
+              selected = "Todo"
+            )
+          ),
+          
+          
+          box(
+            title = "Boxplot puntaje NEM",
+            status = "info",
+            solidHeader = TRUE,
+            width = 8,
+            
+            plotOutput("boxplot_nem", height = "350px")
+          )
+        ),
+        
+        fluidRow(
+          box(
+            title = "Datos filtrados (DT)",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 12,
+            
+            DTOutput("tabla_filtrada")
+          )
+        )
+      ),
+      
+      
+      tabItem(
+        tabName = "tabla",
+        fluidRow(
+          box(
+            title = "Datos completos (limpios)",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 12,
+            
+            DTOutput("tabla_completa")
+          )
+        )
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  datos_clean <- reactive({
+    paes %>%
+      mutate(
+        INGRESO_PERCAPITA_GRUPO_FA = na_if(INGRESO_PERCAPITA_GRUPO_FA, 99),
+        PTJE_NEM = ifelse(PTJE_NEM <= 0, NA, PTJE_NEM)
+      ) %>%
+      filter(!is.na(INGRESO_PERCAPITA_GRUPO_FA),
+             !is.na(PTJE_NEM))
+  })
+  
+  # 2) Datos filtrados por decil
+  datos_filtrados <- reactive({
+    df <- datos_clean()
+    
+    if (input$decil != "Todo") {
+      df <- df %>%
+        filter(as.character(INGRESO_PERCAPITA_GRUPO_FA) == input$decil)
+    }
+    
+    df
+  })
+  
+  # 3) Boxplot de PTJE_NEM por decil (usando datos filtrados)
+  output$boxplot_nem <- renderPlot({
+    df <- datos_filtrados()
+    
+    if (nrow(df) == 0) {
+      plot.new()
+      title("No hay datos para el filtro seleccionado")
+      return(invisible(NULL))
+    }
+    
+    ggplot(df, aes(
+      x = factor(INGRESO_PERCAPITA_GRUPO_FA),
+      y = PTJE_NEM
+    )) +
+      geom_boxplot(fill = "steelblue", alpha = 0.7, outlier.color = "red") +
+      labs(
+        x = "Decil de ingreso per cápita",
+        y = "Puntaje NEM",
+        title = "Distribución del puntaje NEM por decil de ingreso"
+      ) +
+      theme_minimal()
+  })
+  
+  # 4) Tabla filtrada (pestaña gráfico)
+  output$tabla_filtrada <- renderDT({
+    datos_filtrados()
+  })
+  
+  # 5) Tabla completa limpia (pestaña tabla)
+  output$tabla_completa <- renderDT({
+    datos_clean()
   })
 }
 
